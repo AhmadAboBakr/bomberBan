@@ -1,0 +1,127 @@
+﻿<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>hello phaser!</title>
+        <script src="phaser.min.js"></script>
+        <script src= "levels.js"></script>
+    </head>
+    <body>
+
+    <script type="text/javascript">
+
+    window.onload = function() {
+        var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {preload: preload, create: create, update: update});
+
+        function preload() {
+            game.load.spritesheet('player', 'player.png', 44, 40, 6);
+            game.load.image('background', 'background.png');
+            game.load.spritesheet('box', 'box.png', 44, 44, 1);
+            game.load.spritesheet('wall', 'wall.png', 44, 44, 1);
+
+        }
+        var player;
+        var boxes;
+        var walls;
+        var exitPoint;
+        var i=0;
+        function create() {
+            //world
+            game.world.setBounds(0, 0, (levels[i].width + 1) * 44, (levels[i].height + 1) * 44);
+            game.add.tileSprite(0, 0, (levels[i].width + 1) * 44, (levels[i].height + 1) * 44, 'background');
+            game.physics.startSystem(Phaser.Physics.ARCADE);
+            cursors = game.input.keyboard.createCursorKeys();
+            fireButton = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+
+            //player
+            player = game.add.sprite(levels[i].player.x*44, levels[i].player.y*44, 'player');
+            player.animations.add('walk');
+            game.physics.enable(player, Phaser.Physics.ARCADE,true);
+            game.camera.follow(player);
+            player.body.collideWorldBounds = true;
+            player.anchor.setTo(0.5,0.5);
+            //boxes
+            boxes = game.add.group();
+            boxes.enableBody = true;
+            boxes.physicsBodyType = Phaser.Physics.ARCADE;
+            levels[i].boxes.forEach(function (box) {
+                var box = boxes.create(box.x * 44, box.y * 44, 'box');
+                box.body.collideWorldBounds = true;
+            });
+            //walls
+            walls = game.add.group();
+            walls.enableBody = true;
+            walls.physicsBodyType = Phaser.Physics.ARCADE;
+            levels[i].walls.forEach(function (wall) {
+                var wall= walls.create(wall.x * 44, wall.y * 44, 'wall');
+                wall.body.immovable = true;
+            });
+            boxes.enableBodyDebug = true;
+        }
+
+        function update() {
+            game.physics.arcade.collide(player, boxes, collisionHandler);
+            
+            game.physics.arcade.collide(player, walls, collisionHandler,null,this);
+            game.physics.arcade.collide(boxes, walls, collisionHandler);
+            game.physics.arcade.collide(boxes, boxes, collisionHandler);
+            player.body.velocity.setTo(0, 0);
+            player.animations.play('walk', 10, true);
+            if (cursors.left.isDown)
+            {
+                player.body.velocity.x = -200;
+                player.rotation = 3.1415926;
+
+            }
+            else if (cursors.right.isDown)
+            {
+                player.body.velocity.x = 200;
+                player.rotation = 0;
+
+            }
+            else if (cursors.up.isDown)
+            {
+                player.body.velocity.y = -200;
+                player.rotation = 3 * 3.1415926 / 2.0;
+
+            }
+            else if (cursors.down.isDown)
+            {
+                player.body.velocity.y = 200;
+                player.rotation = 3.1415926 / 2;
+
+            }
+            else {
+                player.animations.stop();
+            }
+
+
+            //  Firing?
+            if (fireButton.isDown)
+            {
+//                fireBullet();
+            }
+
+//            if (game.time.now > firingTimer)
+            {
+  //              enemyFires();
+            }
+
+            //  Run collision
+            //game.physics.arcade.overlap(bullets, aliens, collisionHandler, null, this);
+            //game.physics.arcade.overlap(enemyBullets, player, enemyHitsPlayer, null, this);
+            
+        }
+
+        function collisionHandler(obj1, obj2) {
+            obj1.body.velocity.x = 0;
+            obj1.body.velocity.y = 0;
+            obj2.body.velocity.x = 0;
+            obj2.body.velocity.y = 0;
+        }
+
+    }
+    </script>
+
+    </body>
+</html>
