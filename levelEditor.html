@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>hello phaser!</title>
+    <script src="phaser.min.js"></script>
+</head>
+<body>
+    <div id="inputForm">
+        <input type="number" id="widthValue" placeholder="Width" value="4" required />
+        <input type="number" id="heightValue" placeholder="Height" value="4" required />
+        <input type="number" id="bombValue" placeholder="number of bombs" value="4" required />
+        <input type="submit" onclick="startPhaser()" />
+    </div>
+    <script type="text/javascript">
+
+        var level = {
+            width: 0,
+            height: 0,
+            boxes: [],
+            exit: {},
+            walls: [],
+            player: {},
+            bombs: 0
+        }
+        var startPhaser = function () {
+            var game = new Phaser.Game(800, 600, Phaser.AUTO, 'editor', { preload: preload, create: create, update: update });
+            function preload() {
+                game.load.spritesheet('player', 'player.png', 44, 40, 6);
+                game.load.image('background', 'background.png');
+                game.load.spritesheet('box', 'box.png', 44, 44, 1);
+                game.load.spritesheet('wall', 'wall.png', 44, 44, 1);
+
+            }
+            var player;
+            var box ;
+            var wall;
+            var dropabales = [];
+            var exitPoint, cExitPoint;
+            var i = 0;
+            var placing = null;
+            function create() {
+                //world
+                level.width = parseInt(document.getElementById("widthValue").value);
+                level.height = parseInt(document.getElementById("heightValue").value);
+                level.bombs = parseInt(document.getElementById("bombValue").value);
+                document.getElementById("widthValue").parentElement.style.display = "none";
+                game.add.tileSprite(0, 0, (level.width + 1) * 44, (level.height + 1) * 44, 'background');
+                game.physics.startSystem(Phaser.Physics.P2JS);
+                game.stage.backgroundColor = '#304871';
+                player = game.add.sprite((level.width + 3) * 44, (1) * 44, 'player');
+                game.physics.p2.enable(player, true);
+                player.body.static = true;
+                dropabales.push(player);
+                //boxes
+                var boxes = game.add.group();
+                boxes.enableBody = true;
+                boxes.physicsBodyType = Phaser.Physics.P2JS;
+
+                for (var i = 0; i < level.width * level.height - 2; ++i) {
+                    box=boxes.create((level.width + 3) * 44, (3) * 44, 'box');
+                    dropabales.push(box);
+                    box.body.static = true;
+                    game.physics.p2.enable(box, true);
+                }
+                var walls= game.add.group();
+                walls.enableBody = true;
+                walls.physicsBodyType = Phaser.Physics.P2JS;
+                for (var i = 0; i < level.width * level.height - 2; ++i) {
+                    wall = walls.create((level.width + 3) * 44, (5) * 44, 'wall');
+                    dropabales.push(wall);
+                    wall.body.static = true;
+                    game.physics.p2.enable(wall, true);
+                }
+
+                
+                game.input.onDown.add(click, this);
+                game.input.onUp.add(release, this);
+                game.input.addMoveCallback(move, this);
+
+            }
+
+            function update() {
+
+            }
+
+            function click(pointer) {
+                var bodies = game.physics.p2.hitTest(pointer.position, dropabales);
+                if (bodies.length) {
+                    placing = bodies[0].parent;
+                }
+            }
+
+            function release() {
+                placing = null;
+            }
+            function move(pointer, x, y, isDown) {
+                if (placing != null) {
+                    placing.x = parseInt(x / 44) *44+22;
+                    placing.y = parseInt(y / 44) * 44+22;
+                }
+
+            }
+
+
+        }
+
+    </script>
+
+</body>
+</html>
