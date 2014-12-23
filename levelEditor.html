@@ -24,21 +24,27 @@
             bombs: 0
         }
         var startPhaser = function () {
-            var game = new Phaser.Game(800, 600, Phaser.AUTO, 'editor', { preload: preload, create: create, update: update });
+            var levelDOM = document.createElement("p");
+
+            var game = new Phaser.Game(800, 500, Phaser.AUTO, 'editor', { preload: preload, create: create, update: update });
             function preload() {
                 game.load.spritesheet('player', 'player.png', 44, 40, 6);
                 game.load.image('background', 'background.png');
                 game.load.spritesheet('box', 'box.png', 44, 44, 1);
                 game.load.spritesheet('wall', 'wall.png', 44, 44, 1);
+                game.load.spritesheet('door', 'door.png', 44, 44, 1);
 
+                document.body.appendChild(levelDOM);
             }
             var player;
-            var box ;
+            var box;
+            var door;
             var wall;
             var dropabales = [];
             var exitPoint, cExitPoint;
             var i = 0;
             var placing = null;
+            var saveButton;
             function create() {
                 //world
                 level.width = parseInt(document.getElementById("widthValue").value);
@@ -48,8 +54,10 @@
                 game.add.tileSprite(0, 0, (level.width + 1) * 44, (level.height + 1) * 44, 'background');
                 game.physics.startSystem(Phaser.Physics.P2JS);
                 game.stage.backgroundColor = '#304871';
+                saveButton = game.input.keyboard.addKey(Phaser.Keyboard.S);
+                //player
                 player = game.add.sprite((level.width + 3) * 44, (1) * 44, 'player');
-                game.physics.p2.enable(player, true);
+                game.physics.p2.enable(player, false);
                 player.body.static = true;
                 dropabales.push(player);
                 //boxes
@@ -58,22 +66,27 @@
                 boxes.physicsBodyType = Phaser.Physics.P2JS;
 
                 for (var i = 0; i < level.width * level.height - 2; ++i) {
-                    box=boxes.create((level.width + 3) * 44, (3) * 44, 'box');
+                    box = boxes.create((level.width + 3) * 44, (3) * 44, 'box');
                     dropabales.push(box);
                     box.body.static = true;
-                    game.physics.p2.enable(box, true);
+                    game.physics.p2.enable(box, false);
                 }
-                var walls= game.add.group();
+                //walls
+                var walls = game.add.group();
                 walls.enableBody = true;
                 walls.physicsBodyType = Phaser.Physics.P2JS;
                 for (var i = 0; i < level.width * level.height - 2; ++i) {
                     wall = walls.create((level.width + 3) * 44, (5) * 44, 'wall');
                     dropabales.push(wall);
                     wall.body.static = true;
-                    game.physics.p2.enable(wall, true);
+                    game.physics.p2.enable(wall, false);
                 }
+                //door
 
-                
+                door = game.add.sprite((level.width + 3) * 44, (7) * 44, 'door');
+                game.physics.p2.enable(door, false);
+                door.body.static = true;
+                dropabales.push(door);
                 game.input.onDown.add(click, this);
                 game.input.onUp.add(release, this);
                 game.input.addMoveCallback(move, this);
@@ -81,7 +94,42 @@
             }
 
             function update() {
+                if (true) {
+                    console.log("hamada");
+                    if (
+                        player.body.x > level.width * 44 + 22 ||
+                        player.body.y > level.height * 44 + 22 ||
+                        door.body.x > level.width * 44 + 22 ||
+                        door.body.y > level.height * 44 + 22)
+                        levelDOM.innerHTML = "Door and player must be in level bounds";
+                    else {
+                        levelDOM.innerHTML = "";
+                        level.player.x = parseInt((player.body.x) / 44 );
+                        level.player.y = parseInt(player.body.y / 44 );
+                        level.exit.x = parseInt(door.body.x / 44 );
+                        level.exit.y = parseInt(door.body.y / 44 );
+                        level.boxes = [];
+                        level.walls = [];
+                        dropabales.forEach(function (item) {
+                            if (item.body.x < level.width * 44 + 22 && player.body.y < level.height * 44 + 22) {
+                                if (item.body.sprite.key == "box")
+                                    level.boxes.push({
+                                        x: parseInt(item.body.x / 44 ),
+                                        y: parseInt(item.body.y / 44 )
+                                    });
+                                else if (item.body.sprite.key == "wall") {
+                                    level.walls.push({
+                                        x: parseInt(item.body.x / 44 ),
+                                        y: parseInt(item.body.y / 44 )
+                                    });
 
+                                }
+
+                            }
+                        });
+                        levelDOM.innerHTML = JSON.stringify(level);
+                    }
+                }
             }
 
             function click(pointer) {
@@ -96,8 +144,8 @@
             }
             function move(pointer, x, y, isDown) {
                 if (placing != null) {
-                    placing.x = parseInt(x / 44) *44+22;
-                    placing.y = parseInt(y / 44) * 44+22;
+                    placing.x = parseInt(x / 44) * 44 + 22;
+                    placing.y = parseInt(y / 44) * 44 + 22;
                 }
 
             }
